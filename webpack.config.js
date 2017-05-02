@@ -3,8 +3,6 @@ var path = require('path');
 
 var config =  path.resolve(__dirname, './dist/');
 
-console.log(config)
-
 module.exports = {
     entry: "./src/index.js",
     output: {
