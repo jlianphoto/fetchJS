@@ -102,7 +102,7 @@ FetchLoader.prototype.import = function(u) {
 								}
 							}
 							if (hasData(module.exports)) {
-								if (exports.default) {
+								if (module.exports.default) {
 									window.fetchJS.exports = module.exports.default;
 									return
 								}else{
