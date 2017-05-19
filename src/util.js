@@ -5,10 +5,24 @@ function checkType(url){
 
 	if (str.lastIndexOf('.css')>0) {
 		type = 'css';
-	}else if(str.lastIndexOf('.js')>0){
+	}else if(str.lastIndexOf('.js')>0 || str.indexOf(".")<0){
 		type = 'js';
 	}
 	return type;
+}
+
+
+function parseAlias(url){
+	//element-ui/lib/mixins/emitter]
+	var urlArr = url.split("/");
+	var alias = fetchJS.alias;
+	for(let k in fetchJS.alias){
+		if (urlArr[0] === alias[k]) {
+			urlArr[0] = alias[k];
+		}
+	}
+	var url = urlArr.join("/");
+	return url
 }
 
 
@@ -25,4 +39,4 @@ function taskFn(fn){
 }
 
 
-export {checkType , taskFn}
+export {checkType , taskFn , parseAlias}

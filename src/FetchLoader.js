@@ -1,11 +1,18 @@
 import {fetchFunction,fetchCss,scriptParse} from './fetch.js'
-import {checkType,taskFn} from './util.js'
+import {checkType, parseAlias ,taskFn} from './util.js'
+
+import Vue from 'vue';
+window.vue = Vue;
 
 
 function FetchLoader() {
 	this.cfg = {
 		baseURL: "",
-		hash: ""
+		hash: "",
+		alias : {
+			"vue" : Vue,
+			"element-ui":""
+		}
 	};
 
 	this.cash = {};
@@ -17,43 +24,60 @@ function FetchLoader() {
 }
 
 FetchLoader.prototype.config = function(cfg) {
+
 	for (let k in this.cfg) {
 		this.cfg[k] = cfg[k];
 	}
+
 };
 
-FetchLoader.prototype.next = function() {
+FetchLoader.prototype._next = function() {
 	var fn = this.tasks.shift();
 	fn && fn();
 };
 
 
-FetchLoader.prototype.import = function(u) {
-	var self = this;
+FetchLoader.prototype._import = function(u){
+		var self = this;
 	taskFn.call(this, function() {
 
 		let type = checkType(u);
 
 		var cfg = fetchJS.cfg;
+
+		// handle baseURL
 		if (cfg.baseURL) {
 			self.url = cfg.baseURL + u;
 		} else {
 			self.url = u;
 		}
 
+		/*
+		* handle alias
+		* url = baseURL + alias + url
+		*/
+		if (cfg.alias) {
+			// element-ui/lib/mixins/emitter
+			self.url += parseAlias(u);
+		}
+
+
+		// handle hash
 		if (cfg.hash) {
 			self.url += "?" + cfg.hash;
 		}
 
+
+
 		//check cash
 		if (fetchJS.cash.hasOwnProperty(self.url)) {
-			return
+			return self;
 		}
 
 
 		if (type === 'css') {
 			var fn = function() {
-				self.next()
+				self._next()
 			}
 			window.fetchJS.cash[self.url] = "css";
 			fetchCss(self.url, fn);
@@ -72,6 +96,12 @@ FetchLoader.prototype.import = function(u) {
 									return true
 								}
 								return false
+							}
+
+
+							function require(){
+								
+								return vue
 							}
 
 							function define(id, b , fn) {
@@ -99,6 +129,7 @@ FetchLoader.prototype.import = function(u) {
 								}
 							}
 							if (hasData(module.exports)) {
+
 								if (module.exports.default) {
 									window.fetchJS.cash[url] = module.exports.default
 									return
@@ -111,7 +142,7 @@ FetchLoader.prototype.import = function(u) {
 						})('${self.url}')
 					`;
 				scriptParse(tmp);
-				self.next();
+				self._next();
 			}
 			fetchFunction(self.url, fn);
 		}
@@ -119,21 +150,40 @@ FetchLoader.prototype.import = function(u) {
 
 
 	if (this.start) {
-		this.next();
+		this._next();
 		this.start = false;
 	}
 	return this;
+}
 
+
+FetchLoader.prototype.import = function(depend) {
+	if (typeof depend === "string") {
+		this._import(depend)
+		return this;
+	}
+
+	if (Array.isArray(depend)) {
+		depend.forEach(url=>{
+			this._import(url);
+		})
+		return this;
+	}
 };
+
 
 FetchLoader.prototype.then = function(callback) {
 	var self = this;
+
 	taskFn.call(this, function() {
+		console.log(callback)
 		callback && callback(window.fetchJS.cash[self.url]);
-		self.next();
+		self._next();
 	})
 	return this;
 };
+
+
 
 
 FetchLoader.prototype.asynImport = function(url){
