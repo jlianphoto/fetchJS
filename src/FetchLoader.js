@@ -1,18 +1,12 @@
 import {fetchFunction,fetchCss,scriptParse} from './fetch.js'
 import {checkType, parseAlias ,taskFn} from './util.js'
 
-import Vue from 'vue';
-window.vue = Vue;
-
 
 function FetchLoader() {
 	this.cfg = {
 		baseURL: "",
 		hash: "",
-		alias : {
-			"vue" : Vue,
-			"element-ui":""
-		}
+		alias : null
 	};
 
 	this.cash = {};
@@ -38,12 +32,17 @@ FetchLoader.prototype._next = function() {
 
 
 FetchLoader.prototype._import = function(u){
-		var self = this;
+	var self = this;
+
 	taskFn.call(this, function() {
 
 		let type = checkType(u);
 
 		var cfg = fetchJS.cfg;
+
+		if (u.indexOf(".")<0) {
+			u = u+".js";
+		}
 
 		// handle baseURL
 		if (cfg.baseURL) {
@@ -67,10 +66,9 @@ FetchLoader.prototype._import = function(u){
 			self.url += "?" + cfg.hash;
 		}
 
-
-
 		//check cash
 		if (fetchJS.cash.hasOwnProperty(self.url)) {
+			self._next();
 			return self;
 		}
 
@@ -99,13 +97,16 @@ FetchLoader.prototype._import = function(u){
 							}
 
 
-							function require(){
-								
-								return vue
+							function require(url){
+								fetchJS.import(url);							
 							}
 
-							function define(id, b , fn) {
+							function define(id, d , fn) {
 								
+								for (var i = 0; i < d.length; i++) {
+									require(d[i]);
+								}
+
 								var a = fn();
 
 								if (a.default) {
@@ -169,21 +170,19 @@ FetchLoader.prototype.import = function(depend) {
 		})
 		return this;
 	}
+
+	throw new Error("the parameter of import must be String or Array")
 };
 
 
 FetchLoader.prototype.then = function(callback) {
 	var self = this;
-
 	taskFn.call(this, function() {
-		console.log(callback)
 		callback && callback(window.fetchJS.cash[self.url]);
 		self._next();
 	})
 	return this;
 };
-
-
 
 
 FetchLoader.prototype.asynImport = function(url){

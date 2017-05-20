@@ -5,7 +5,7 @@ function checkType(url){
 
 	if (str.lastIndexOf('.css')>0) {
 		type = 'css';
-	}else if(str.lastIndexOf('.js')>0 || str.indexOf(".")<0){
+	}else if(str.lastIndexOf('.js')>0){
 		type = 'js';
 	}
 	return type;
