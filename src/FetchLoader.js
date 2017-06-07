@@ -56,7 +56,6 @@ FetchLoader.prototype._import = function(u){
 		* url = baseURL + alias + url
 		*/
 		if (cfg.alias) {
-			// element-ui/lib/mixins/emitter
 			self.url += parseAlias(u);
 		}
 
@@ -96,16 +95,7 @@ FetchLoader.prototype._import = function(u){
 								return false
 							}
 
-
-							function require(url){
-								fetchJS.import(url);							
-							}
-
 							function define(id, d , fn) {
-								
-								for (var i = 0; i < d.length; i++) {
-									require(d[i]);
-								}
 
 								var a = fn();
 

@@ -13,7 +13,6 @@ function checkType(url){
 
 
 function parseAlias(url){
-	//element-ui/lib/mixins/emitter]
 	var urlArr = url.split("/");
 	var alias = fetchJS.alias;
 	for(let k in fetchJS.alias){
